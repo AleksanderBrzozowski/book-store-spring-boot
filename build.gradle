@@ -10,6 +10,7 @@ buildscript {
 		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
 		classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
 		classpath("org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}")
+		classpath("org.jetbrains.kotlin:kotlin-noarg:${kotlin_version}")
 	}
 }
 
@@ -18,6 +19,7 @@ apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'kotlin'
 apply plugin: 'kotlin-spring'
+apply plugin: 'kotlin-jpa'
 
 jar {
 	baseName = 'book-store'
