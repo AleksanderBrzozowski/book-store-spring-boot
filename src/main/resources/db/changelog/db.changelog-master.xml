@@ -1,9 +1,38 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext
-                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
-                   http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
 
+    <changeSet id="create-category-table" author="brzozowski">
+        <createTable tableName="category">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_category"/>
+            </column>
+            <column name="name" type="varchar(30)">
+                <constraints unique="true" checkConstraint="CHECK length(trim(name)) > 0"/>
+            </column>
+        </createTable>
+        <sql>
+            ALTER TABLE category ADD CONSTRAINT name_not_blank CHECK (LENGTH(TRIM(name)) > 0);
+        </sql>
+
+    </changeSet>
+
+    <changeSet id="create-subcategory-table" author="brzozowski">
+        <createTable tableName="subcategory">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_subcategory"/>
+            </column>
+            <column name="name" type="varchar(30)">
+            </column>
+            <column name="category_id" type="int">
+                <constraints foreignKeyName="fk_category_id" referencedTableName="category" referencedColumnNames="id"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="subcategory" columnNames="category_id, name"/>
+        <sql>
+            ALTER TABLE subcategory ADD CONSTRAINT name_not_blank CHECK (LENGTH(TRIM(name)) > 0);
+        </sql>
+    </changeSet>
 </databaseChangeLog>
+
