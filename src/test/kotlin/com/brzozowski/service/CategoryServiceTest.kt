@@ -5,10 +5,6 @@ import com.brzozowski.domain.category.dto.SubcategoryDto
 import com.brzozowski.domain.category.repository.CategoryRepository
 import com.brzozowski.domain.category.repository.SubcategoryRepository
 import com.brzozowski.domain.category.service.*
-import com.brzozowski.presentation.category.model.CreateCategoryModel
-import com.brzozowski.presentation.category.model.CreateSubcategoryModel
-import com.brzozowski.presentation.category.model.UpdateCategoryModel
-import com.brzozowski.presentation.category.model.UpdateSubcategoryModel
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.samePropertyValuesAs
@@ -49,11 +45,11 @@ class CategoryServiceTest {
     @Test
     fun `given existing category when add category expect exception`() {
         //given
-        val createCategoryModel = CreateCategoryModel("category name")
-        categoryService.addCategory(createCategoryModel)
+        val categoryName = "category name"
+        categoryService.addCategory(categoryName = categoryName)
 
         //when && then
-        assertThatThrownBy { categoryService.addCategory(createCategoryModel) }
+        assertThatThrownBy { categoryService.addCategory(categoryName = categoryName) }
                 .isInstanceOf(CategoryAlreadyExistException::class.java)
     }
 
@@ -61,10 +57,9 @@ class CategoryServiceTest {
     fun `given not existing category when add category expect save category`() {
         //given
         val categoryName = "category name"
-        val createCategoryModel = CreateCategoryModel(name = categoryName)
 
         //when
-        val categoryDto = categoryService.addCategory(createCategoryModel)
+        val categoryDto = categoryService.addCategory(categoryName = categoryName)
 
         //then
         val categories = categoryService.findAllCategories()
@@ -78,18 +73,17 @@ class CategoryServiceTest {
 
         //when && then
         assertThatThrownBy {
-            categoryService.addSubcategory(CreateSubcategoryModel(name = "subcategory name", categoryId = categoryId))
+            categoryService.addSubcategory(subcategoryName = "subcategory name", categoryId = categoryId)
         }.isInstanceOf(CategoryNotFoundException::class.java)
     }
 
     @Test
     fun `given subcategory with existing category when add subcategory expect save subcategory`() {
         //given
-        val categoryDto = categoryService.addCategory(CreateCategoryModel(name = "name"))
-        val createSubcategoryModel = CreateSubcategoryModel(name = "subcategory name", categoryId = categoryDto.id)
+        val categoryDto = categoryService.addCategory(categoryName = "name")
 
         //when
-        val subcategoryDto = categoryService.addSubcategory(createSubcategoryModel)
+        val subcategoryDto = categoryService.addSubcategory(subcategoryName = "subcategory name", categoryId = categoryDto.id)
 
         //then
         val subcategories = categoryService.findAllSubcategories(categoryDto.id)
@@ -99,59 +93,55 @@ class CategoryServiceTest {
     @Test
     fun `given existing subcategory when add subcategory expect exception`() {
         //given
-        val category = categoryService.addCategory(CreateCategoryModel(name = "category"))
-        val createSubcategoryModel = CreateSubcategoryModel(name = "subcategory", categoryId = category.id)
-        categoryService.addSubcategory(createSubcategoryModel)
+        val categoryId = categoryService.addCategory(categoryName = "category").id
+        val subcategoryName = "subcategory name"
+        categoryService.addSubcategory(subcategoryName = subcategoryName, categoryId = categoryId)
 
         //when && then
-        assertThatThrownBy { categoryService.addSubcategory(createSubcategoryModel) }
+        assertThatThrownBy { categoryService.addSubcategory(subcategoryName = subcategoryName, categoryId = categoryId) }
                 .isInstanceOf(SubcategoryAlreadyExistException::class.java)
     }
 
     @Test
     fun `when update existing subcategory expect update subcategory`() {
         //given
-        val categoryDto = categoryService.addCategory(CreateCategoryModel(name = "category"))
-        val createSubcategoryModel = CreateSubcategoryModel(name = "subcategory", categoryId = categoryDto.id)
-        val subcategoryDto = categoryService.addSubcategory(createSubcategoryModel)
+        val categoryId = categoryService.addCategory(categoryName = "category name").id
+        val subcategoryDto = categoryService.addSubcategory(subcategoryName = "subcategory name", categoryId = categoryId)
 
         //when
         val updatedName = "subcategory1"
-        val updatedSubcategoryDto = UpdateSubcategoryModel(name = updatedName)
-                .let { categoryService.updateSubcategory(model = it, subcategoryId = subcategoryDto.id) }
+        val updatedSubcategoryDto = categoryService.updateSubcategory(subcategoryName = updatedName, subcategoryId = subcategoryDto.id)
 
         //then
         val expectedSubcategoryDto = SubcategoryDto(name = updatedName, id = subcategoryDto.id)
 
         assertThat(updatedSubcategoryDto, samePropertyValuesAs(expectedSubcategoryDto))
 
-        val allSubcategories = categoryService.findAllSubcategories(categoryId = categoryDto.id)
+        val allSubcategories = categoryService.findAllSubcategories(categoryId = categoryId)
         assertThat(allSubcategories, contains(samePropertyValuesAs(expectedSubcategoryDto)))
     }
 
     @Test
     fun `when update not existing subcategory expect exception`() {
         //given
-        categoryService.addCategory(CreateCategoryModel(name = "category"))
+        categoryService.addCategory(categoryName = "category name")
 
         //when && then
-        val model = UpdateSubcategoryModel(name = "subcategory")
-        assertThatThrownBy { categoryService.updateSubcategory(model = model, subcategoryId = 1) }
+        assertThatThrownBy { categoryService.updateSubcategory(subcategoryId = 1, subcategoryName = "subcategory name") }
                 .isInstanceOf(SubcategoryNotFoundException::class.java)
     }
 
     @Test
     fun `when update existing category expect update category`() {
         //given
-        val categoryDto = categoryService.addCategory(CreateCategoryModel(name = "category"))
+        val categoryId = categoryService.addCategory(categoryName = "category name").id
 
         //when
         val updatedName = "category1"
-        val updatedCategoryDto = UpdateCategoryModel(name = "category1")
-                .let { categoryService.updateCategory(model = it, categoryId = categoryDto.id) }
+        val updatedCategoryDto = categoryService.updateCategory(categoryId = categoryId, categoryName = "category1")
 
         //then
-        val expectedCategoryDto = CategoryDto(id = categoryDto.id, name = updatedName)
+        val expectedCategoryDto = CategoryDto(id = categoryId, name = updatedName)
 
         assertThat(updatedCategoryDto, samePropertyValuesAs(expectedCategoryDto))
 
@@ -162,8 +152,7 @@ class CategoryServiceTest {
     @Test
     fun `when update not existing category expect exception`() {
         //when && then
-        val model = UpdateCategoryModel(name = "category")
-        assertThatThrownBy { categoryService.updateCategory(model = model, categoryId = 1) }
+        assertThatThrownBy { categoryService.updateCategory(categoryId = 1, categoryName = "category name") }
                 .isInstanceOf(CategoryNotFoundException::class.java)
     }
 }

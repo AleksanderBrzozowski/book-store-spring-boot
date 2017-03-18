@@ -6,10 +6,6 @@ import com.brzozowski.domain.category.entity.Category
 import com.brzozowski.domain.category.entity.Subcategory
 import com.brzozowski.domain.category.repository.CategoryRepository
 import com.brzozowski.domain.category.repository.SubcategoryRepository
-import com.brzozowski.presentation.category.model.CreateCategoryModel
-import com.brzozowski.presentation.category.model.CreateSubcategoryModel
-import com.brzozowski.presentation.category.model.UpdateCategoryModel
-import com.brzozowski.presentation.category.model.UpdateSubcategoryModel
 import com.brzozowski.presentation.common.exception.BusinessException
 import com.brzozowski.util.ifPresent
 import org.springframework.stereotype.Service
@@ -34,44 +30,42 @@ class CategoryService(private val categoryRepository: CategoryRepository,
                 ?: throw SubcategoryNotFoundException()
     }
 
-    fun addCategory(model: CreateCategoryModel): CategoryDto {
-        categoryRepository.findCategoryByName(model.name)
+    fun addCategory(categoryName: String): CategoryDto {
+        categoryRepository.findCategoryByName(categoryName)
                 .ifPresent { throw CategoryAlreadyExistException() }
 
-        return Category(name = model.name!!).let {
-            categoryRepository.save(it).let {
-                CategoryDto.parse(it)
-            }
+        return Category(name = categoryName).let {
+            categoryRepository.save(it)
+                    .let { CategoryDto.parse(it) }
         }
     }
 
     @Transactional
-    fun addSubcategory(model: CreateSubcategoryModel): SubcategoryDto {
-        return categoryRepository.findOne(model.categoryId)
+    fun addSubcategory(subcategoryName: String, categoryId: Int): SubcategoryDto {
+        return categoryRepository.findOne(categoryId)
                 ?.let {
                     it.subcategories
-                            .find { it.name.equals(other = model.name, ignoreCase = true) }
+                            .find { it.name.equals(other = subcategoryName, ignoreCase = true) }
                             .ifPresent { throw SubcategoryAlreadyExistException() }
 
-                    subcategoryRepository.save(Subcategory(name = model.name!!, category = it)).let {
-                        SubcategoryDto.parse(it)
-                    }
+                    subcategoryRepository.save(Subcategory(name = subcategoryName, category = it))
+                            .let { SubcategoryDto.parse(it) }
                 }
                 ?: throw CategoryNotFoundException()
     }
 
     @Transactional
-    fun updateCategory(model: UpdateCategoryModel, categoryId: Int): CategoryDto {
+    fun updateCategory(categoryId: Int, categoryName: String): CategoryDto {
         return categoryRepository.findOne(categoryId)
-                ?.apply { this.name = model.name!! }
+                ?.apply { this.name = categoryName }
                 ?.let { CategoryDto.parse(it) }
                 ?: throw CategoryNotFoundException()
     }
 
     @Transactional
-    fun updateSubcategory(model: UpdateSubcategoryModel, subcategoryId: Int): SubcategoryDto {
+    fun updateSubcategory(subcategoryName: String, subcategoryId: Int): SubcategoryDto {
         return subcategoryRepository.findOne(subcategoryId)
-                ?.apply { this.name = model.name!! }
+                ?.apply { this.name = subcategoryName }
                 ?.let { SubcategoryDto.parse(it) }
                 ?: throw SubcategoryNotFoundException()
     }
