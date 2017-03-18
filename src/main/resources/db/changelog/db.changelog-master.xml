@@ -9,7 +9,7 @@
                 <constraints primaryKey="true" primaryKeyName="pk_category"/>
             </column>
             <column name="name" type="varchar(30)">
-                <constraints unique="true" checkConstraint="CHECK length(trim(name)) > 0"/>
+                <constraints unique="true"/>
             </column>
         </createTable>
         <sql>
