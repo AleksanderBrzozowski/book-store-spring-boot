@@ -26,8 +26,7 @@ class CategoryService(private val categoryRepository: CategoryRepository,
 
     fun findAllSubcategories(categoryId: Int): List<SubcategoryDto> {
         return subcategoryRepository.findByCategoryId(categoryId)
-                ?.map { SubcategoryDto.parse(it) }
-                ?: throw SubcategoryNotFoundException()
+                .map { SubcategoryDto.parse(it) }
     }
 
     fun addCategory(categoryName: String): CategoryDto {
@@ -40,18 +39,15 @@ class CategoryService(private val categoryRepository: CategoryRepository,
         }
     }
 
-    @Transactional
     fun addSubcategory(subcategoryName: String, categoryId: Int): SubcategoryDto {
-        return categoryRepository.findOne(categoryId)
-                ?.let {
-                    it.subcategories
-                            .find { it.name.equals(other = subcategoryName, ignoreCase = true) }
-                            .ifPresent { throw SubcategoryAlreadyExistException() }
+        val category = categoryRepository.findOne(categoryId) ?: throw CategoryNotFoundException()
 
-                    subcategoryRepository.save(Subcategory(name = subcategoryName, category = it))
-                            .let { SubcategoryDto.parse(it) }
-                }
-                ?: throw CategoryNotFoundException()
+        subcategoryRepository.findByCategoryId(categoryId)
+                .find { it.name.equals(subcategoryName, ignoreCase = true) }
+                ?.apply { throw SubcategoryAlreadyExistException() }
+
+        return subcategoryRepository.save(Subcategory(name = subcategoryName, category = category))
+                .let { SubcategoryDto(name = it.name, id = it.id) }
     }
 
     @Transactional

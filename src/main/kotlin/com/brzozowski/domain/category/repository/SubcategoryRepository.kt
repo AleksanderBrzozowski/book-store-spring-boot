@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository
  * @author Aleksander Brzozowski
  */
 interface SubcategoryRepository : JpaRepository<Subcategory, Int> {
-    fun findByCategoryId(categoryId: Int): List<Subcategory>?
+    fun findByCategoryId(categoryId: Int): List<Subcategory>
 }
