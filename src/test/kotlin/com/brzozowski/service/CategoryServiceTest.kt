@@ -2,20 +2,16 @@ package com.brzozowski.service
 
 import com.brzozowski.domain.category.dto.CategoryDto
 import com.brzozowski.domain.category.dto.SubcategoryDto
-import com.brzozowski.domain.category.repository.CategoryRepository
-import com.brzozowski.domain.category.repository.SubcategoryRepository
 import com.brzozowski.domain.category.service.*
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.hamcrest.Matchers.contains
-import org.hamcrest.Matchers.samePropertyValuesAs
-import org.junit.After
+import org.hamcrest.Matchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
+import org.springframework.transaction.annotation.Transactional
 
 
 /**
@@ -25,22 +21,11 @@ import org.springframework.test.context.junit4.SpringRunner
 @Suppress("SpringKotlinAutowiredMembers")
 @SpringBootTest
 @RunWith(SpringRunner::class)
-@TestPropertySource("classpath:/test.properties")
+@Transactional
 class CategoryServiceTest {
 
     @Autowired
     private lateinit var categoryService: CategoryService
-
-    @Autowired
-    private lateinit var categoryRepository: CategoryRepository
-    @Autowired
-    private lateinit var subcategoryRepository: SubcategoryRepository
-
-    @After
-    fun after() {
-        subcategoryRepository.deleteAll()
-        categoryRepository.deleteAll()
-    }
 
     @Test
     fun `given existing category when add category expect exception`() {
@@ -154,5 +139,23 @@ class CategoryServiceTest {
         //when && then
         assertThatThrownBy { categoryService.updateCategory(categoryId = 1, categoryName = "category name") }
                 .isInstanceOf(CategoryNotFoundException::class.java)
+    }
+
+    @Test
+    fun `when no categories it should return emptyl ist`() {
+        //when
+        val allCategories = categoryService.findAllCategories()
+
+        //then
+        assertThat(allCategories, hasSize(0))
+    }
+
+    @Test
+    fun `when no subcategories for given category id it should return empty list`() {
+        //when
+        val allSubcategories = categoryService.findAllSubcategories(1)
+
+        //then
+        assertThat(allSubcategories, hasSize(0))
     }
 }
