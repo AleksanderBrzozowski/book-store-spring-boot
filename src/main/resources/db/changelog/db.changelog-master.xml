@@ -13,7 +13,8 @@
             </column>
         </createTable>
         <sql>
-            ALTER TABLE category ADD CONSTRAINT name_not_blank CHECK (LENGTH(TRIM(name)) > 0);
+            ALTER TABLE category
+                ADD CONSTRAINT name_not_blank CHECK (LENGTH(TRIM(name)) > 0);
         </sql>
 
     </changeSet>
@@ -31,7 +32,62 @@
         </createTable>
         <addUniqueConstraint tableName="subcategory" columnNames="category_id, name"/>
         <sql>
-            ALTER TABLE subcategory ADD CONSTRAINT name_not_blank CHECK (LENGTH(TRIM(name)) > 0);
+            ALTER TABLE subcategory
+                ADD CONSTRAINT name_not_blank CHECK (LENGTH(TRIM(name)) > 0);
+        </sql>
+    </changeSet>
+
+    <changeSet id="add-book-table" author="brzozowski">
+        <createTable tableName="book">
+            <column name="isbn" type="char(13)">
+                <constraints primaryKey="true" primaryKeyName="pk_book"/>
+            </column>
+            <column name="title" type="varchar(60)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="format" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subcategory_id" type="int">
+                <constraints foreignKeyName="fk_subcategory_id" referencedTableName="subcategory"
+                             referencedColumnNames="id"
+                             nullable="false"/>
+            </column>
+        </createTable>
+        <sql>
+            ALTER TABLE book
+                ADD CONSTRAINT title_not_blank CHECK (LENGTH(TRIM(title)) > 0);
+            ALTER TABLE book
+                ADD CONSTRAINT format_values CHECK (format IN ('PRINTED', 'EBOOK'));
+            ALTER TABLE book
+                ADD CONSTRAINT isbn_length CHECK (LENGTH(isbn) = 10 OR LENGTH(isbn) = 13);
+        </sql>
+    </changeSet>
+
+    <changeSet id="add-book-category-table" author="brzozowski">
+        <createTable tableName="book_category">
+            <column name="book_isbn" type="char(13)">
+                <constraints foreignKeyName="fk_book_isbn" referencedTableName="book" referencedColumnNames="isbn"
+                             unique="true"/>
+            </column>
+            <column name="category_id" type="int">
+                <constraints foreignKeyName="fk_category_id" referencedTableName="category" referencedColumnNames="id"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="add-book-category-special-table" author="brzozowski">
+        <createTable tableName="book_category_special">
+            <column name="book_isbn" type="char(13)">
+                <constraints foreignKeyName="fk_book_isbn" referencedTableName="book" referencedColumnNames="isbn"
+                             unique="true"/>
+            </column>
+            <column name="type" type="varchar(15)"/>
+        </createTable>
+        <addUniqueConstraint tableName="book_category_special" columnNames="book_isbn, type"/>
+        <sql>
+            ALTER TABLE book_category_special
+                ADD CONSTRAINT type_values CHECK (type IN ('PROMO', 'BEST'))
         </sql>
     </changeSet>
 </databaseChangeLog>
